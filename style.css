@@ -1,0 +1,269 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    color: #222;
+    line-height: 1.5;
+}
+
+.container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
+}
+
+
+
+.card {
+    background: white;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.card h2 {
+    margin-bottom: 10px;
+    color: #1f4d3a;
+}
+
+.card p {
+    margin-bottom: 15px;
+    color: #555;
+}
+
+
+
+#loginView {
+    max-width: 450px;
+    margin: 80px auto;
+}
+
+#loginView h1 {
+    text-align: center;
+    color: #1f4d3a;
+    margin-bottom: 20px;
+}
+
+#loginForm {
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+.app-header {
+    background: white;
+    padding: 25px;
+    margin-bottom: 25px;
+    border-radius: 10px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.app-header h1 {
+    color: #1f4d3a;
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#currentUser {
+    font-weight: bold;
+    color: #1f4d3a;
+}
+
+
+
+label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    font-weight: bold;
+    color: #333;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: white;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #1f4d3a;
+}
+
+textarea {
+    resize: vertical;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px 20px;
+}
+
+
+
+button {
+    border: none;
+    border-radius: 6px;
+    padding: 11px 18px;
+    margin-top: 18px;
+
+    background: #1f4d3a;
+    color: white;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: #16392b;
+}
+
+#logoutBtn {
+    background: #b33a3a;
+    margin-top: 0;
+}
+
+#logoutBtn:hover {
+    background: #8f2929;
+}
+
+#clearAll {
+    background: #b33a3a;
+}
+
+#clearAll:hover {
+    background: #8f2929;
+}
+
+
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+th,
+td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+    font-size: 14px;
+}
+
+th {
+    background: #1f4d3a;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background: #f7f7f7;
+}
+
+tr:hover {
+    background: #eef5f1;
+}
+
+#emptyMessage {
+    margin-top: 15px;
+    color: #777;
+    font-style: italic;
+}
+
+
+
+#loginMessage,
+#analysisStatus {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+
+
+#modelResults {
+    margin-top: 20px;
+}
+
+.result-card {
+    border: 1px solid #ddd;
+    border-left: 5px solid #1f4d3a;
+    padding: 18px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    background: #fafafa;
+}
+
+.result-card h3 {
+    color: #1f4d3a;
+    margin-bottom: 10px;
+}
+
+.result-card p {
+    margin-bottom: 7px;
+}
+
+.result-label {
+    font-weight: bold;
+    color: #333;
+}
+
+
+
+@media (max-width: 768px) {
+
+    .container {
+        width: 95%;
+        margin: 15px auto;
+    }
+
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .user-area {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #loginView {
+        margin: 30px auto;
+    }
+}

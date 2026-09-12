@@ -1,0 +1,37 @@
+﻿year,operator,area,indicator,value,unit,source,notes
+2025,Grameenphone,Energy Efficiency,Total energy consumed,621.28,GWh,Operator data compiled in paper,
+2025,Grameenphone,Energy Efficiency,Electricity consumption,564.86,GWh,Operator data compiled in paper,
+2025,Grameenphone,Energy Efficiency,Fossil fuel energy use,50.4,GWh,Operator data compiled in paper,
+2025,Grameenphone,Energy Efficiency,Energy-efficiency practices,Reported,text,Operator data compiled in paper,AI Power Star; energy monitoring; cooling optimisation; power-management optimisation
+2025,Grameenphone,Energy Efficiency,Digital energy management,Reported,text,Operator data compiled in paper,AI Power Star; energy monitoring; remote monitoring; fault prediction
+2025,Grameenphone,Renewable Energy,Solar-powered sites,1014,sites,Operator data compiled in paper,
+2025,Grameenphone,Renewable Energy,Self-generated renewable energy,6.02,GWh,Operator data compiled in paper,
+2025,Grameenphone,Renewable Energy,Renewable electricity through EACs,190,GWh,Operator data compiled in paper,EACs; not physical renewable generation
+2025,Grameenphone,Renewable Energy,CPPA status,Pending,status,Operator data compiled in paper,CPPA pilot pending SLA
+2025,Grameenphone,GHG / Carbon Reduction,Scope 1+2 emissions,231774,tCO2e,Operator data compiled in paper,Reported value
+2025,Grameenphone,GHG / Carbon Reduction,Scope 1+2 change vs 2019 baseline,7,%,Operator data compiled in paper,Above 2019 baseline
+2025,Grameenphone,GHG / Carbon Reduction,Scope 1+2 reduction target by 2030,50,%,Operator data compiled in paper,
+2025,Grameenphone,E-waste Management,E-waste recycled,1163.94,tonnes,Operator data compiled in paper,
+2025,Banglalink,Energy Efficiency,Energy savings,4,GWh,Operator data compiled in paper,Approximate reported value
+2025,Banglalink,Energy Efficiency,Energy reduction,1.1,%,Operator data compiled in paper,
+2025,Banglalink,Energy Efficiency,Fuel saved,302,kL,Operator data compiled in paper,
+2025,Banglalink,Energy Efficiency,Fuel reduction,14,%,Operator data compiled in paper,
+2025,Banglalink,Energy Efficiency,Energy-efficiency practices,Reported,text,Operator data compiled in paper,AI-driven power saving; cooling optimisation; node shutdown; RAN power-system modernisation
+2025,Banglalink,Energy Efficiency,Digital energy management,Reported,text,Operator data compiled in paper,AI-driven power saving; operational optimisation
+2025,Banglalink,Renewable Energy,Solar capacity,126,kWp,Operator data compiled in paper,80 kWp Gazipur DC + 46 kWp across 10 RAN sites
+2025,Banglalink,Renewable Energy,Expected solar generation,0.2,GWh/year,Operator data compiled in paper,
+2025,Banglalink,GHG / Carbon Reduction,Operator-level GHG data,NA,NA,Operator data compiled in paper,Not sufficiently disclosed
+2025,Banglalink,GHG / Carbon Reduction,GHG reduction target,NA,NA,Operator data compiled in paper,Not sufficiently disclosed
+2025,Banglalink,E-waste Management,Operator-level e-waste data,NA,NA,Operator data compiled in paper,Not sufficiently disclosed
+2025,Robi,Energy Efficiency,Energy-efficiency practices,Reported,text,Operator data compiled in paper,AI/IoT; tower-site optimisation; cooling-system modernisation; lithium batteries
+2025,Robi,Energy Efficiency,Digital energy management,Reported,text,Operator data compiled in paper,Data-driven sustainability monitoring; AI/IoT; tower optimisation
+2025,Robi,Renewable Energy,Solar-powered network sites,12.5,%,Operator data compiled in paper,
+2025,Robi,Renewable Energy,Renewable energy generated/consumed,13533.5,GJ,Operator data compiled in paper,
+2025,Robi,Renewable Energy,Solar share of total energy consumption,2.5,%,Operator data compiled in paper,
+2025,Robi,Renewable Energy,CPPA solar park capacity,100,MWp,Operator data compiled in paper,BOO model
+2025,Robi,Renewable Energy,Expected annual CO2 reduction from CPPA solar park,68200,tCO2e/year,Operator data compiled in paper,
+2025,Robi,GHG / Carbon Reduction,Carbon emission reduction,2.58,%,Operator data compiled in paper,Compared with 2022 baseline
+2025,Robi,GHG / Carbon Reduction,CO2 offset,1476,tCO2e,Operator data compiled in paper,
+2025,Robi,GHG / Carbon Reduction,Scope 1+2 reduction target by 2030,42,%,Operator data compiled in paper,
+2025,Robi,GHG / Carbon Reduction,Scope 3 reduction target by 2030,25,%,Operator data compiled in paper,
+2025,Robi,E-waste Management,Operator-level e-waste data,NA,NA,Operator data compiled in paper,Not sufficiently disclosed
