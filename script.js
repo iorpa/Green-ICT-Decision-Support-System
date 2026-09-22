@@ -21,9 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const resultsCard = document.getElementById("resultsCard");
   const modelResults = document.getElementById("modelResults");
 
-  // =========================================================
   // LOGIN
-  // =========================================================
 
   loginForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -66,9 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // =========================================================
   // LOGOUT
-  // =========================================================
 
   logoutBtn.addEventListener("click", async () => {
     try {
@@ -82,9 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
     location.reload();
   });
 
-  // =========================================================
   // SHOW APPLICATION
-  // =========================================================
 
   function showApplication(data) {
     loginView.style.display = "none";
@@ -95,9 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
     loadOperatorData();
   }
 
-  // =========================================================
   // CHECK SESSION
-  // =========================================================
 
   async function checkSession() {
     try {
@@ -117,9 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // =========================================================
   // LOAD OPERATOR DATA
-  // =========================================================
 
   async function loadOperatorData() {
     try {
@@ -159,9 +149,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // =========================================================
+   
   // ADD EVIDENCE
-  // =========================================================
 
   dataForm.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -213,10 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // =========================================================
+  
   // RUN DECISION-SUPPORT MODEL
-  // =========================================================
-
   runModelBtn.addEventListener("click", async () => {
     analysisStatus.textContent = "Running decision-support model...";
 
@@ -243,9 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       modelResults.innerHTML = "";
 
-      // =================================================
       // FINAL DECISION-SUPPORT RESULTS
-      // =================================================
 
       if (result.results && result.results.length > 0) {
         const heading = document.createElement("h3");
@@ -377,9 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
           modelResults.appendChild(meta);
         }
       } else if (result.findings && result.findings.length > 0) {
-        // =============================================
         // FALLBACK: GAP FINDINGS
-        // =============================================
 
         const heading = document.createElement("h3");
 
@@ -430,9 +413,7 @@ document.addEventListener("DOMContentLoaded", () => {
           modelResults.appendChild(div);
         });
       } else {
-        // =============================================
         // NO FINDINGS
-        // =============================================
 
         modelResults.innerHTML = `
 
@@ -460,9 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // =========================================================
   // CLEAR OPERATOR EVIDENCE
-  // =========================================================
 
   clearAllBtn.addEventListener("click", async () => {
     if (!confirm("Clear all your evidence?")) {
@@ -492,9 +471,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // =========================================================
   // TABLE CELL HELPER
-  // =========================================================
 
   function addCell(row, value) {
     const cell = document.createElement("td");
@@ -504,9 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
     row.appendChild(cell);
   }
 
-  // =========================================================
   // START APPLICATION
-  // =========================================================
 
   checkSession();
 });

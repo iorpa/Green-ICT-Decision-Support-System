@@ -11,9 +11,8 @@ ACTION_RULES_FILE = BASE_DIR / "action_rules.csv"
 PRIORITY_RULES_FILE = BASE_DIR / "priority_rules.csv"
 
 
-# =============================================================
+
 # CSV HELPERS
-# =============================================================
 
 def read_csv_file(file_path):
     """Read a CSV file and return a list of dictionaries."""
@@ -66,9 +65,8 @@ def is_missing(value):
     }
 
 
-# =============================================================
+
 # OPERATOR EVIDENCE
-# =============================================================
 
 def operator_matches(row_operator, selected_operator):
     """Check whether a CSV row belongs to the selected operator."""
@@ -104,9 +102,8 @@ def load_all_operator_evidence():
     return read_csv_file(OPERATOR_DATA_FILE)
 
 
-# =============================================================
 # RULE LOADERS
-# =============================================================
+
 
 def load_gap_rules():
     """Load gap-analysis rules."""
@@ -132,9 +129,9 @@ def load_priority_rules():
     return read_csv_file(PRIORITY_RULES_FILE)
 
 
-# =============================================================
+
 # EVIDENCE SEARCH
-# =============================================================
+
 
 def find_evidence(evidence_rows, area=None, indicator=None):
     """
@@ -173,9 +170,8 @@ def find_evidence(evidence_rows, area=None, indicator=None):
     return matches
 
 
-# =============================================================
+
 # GAP RULE HELPERS
-# =============================================================
 
 def get_rule_id(rule):
     """Return the gap rule ID."""
@@ -193,9 +189,7 @@ def get_gap_type(rule):
     ).strip()
 
 
-# =============================================================
 # BUILD GAP FINDING
-# =============================================================
 
 def build_finding(
     operator,
@@ -284,9 +278,7 @@ def build_finding(
     }
 
 
-# =============================================================
 # GAP ANALYSIS
-# =============================================================
 
 def analyze_gap(
     rule,
@@ -308,9 +300,7 @@ def analyze_gap(
 
     gap_id = get_rule_id(rule)
 
-    # =========================================================
-    # G01 - Energy-efficiency measurement gap
-    # =========================================================
+# G01 - Energy-efficiency measurement gap
 
     if gap_id == "G01":
 
@@ -328,9 +318,7 @@ def analyze_gap(
         }]
 
 
-    # =========================================================
     # G02 - Energy-efficiency comparability gap
-    # =========================================================
 
     if gap_id == "G02":
 
@@ -435,9 +423,7 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G03 - Renewable-energy reporting comparability gap
-    # =========================================================
 
     if gap_id == "G03":
 
@@ -488,10 +474,8 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G04 - Renewable-energy procurement
     # implementation gap
-    # =========================================================
 
     if gap_id == "G04":
 
@@ -523,9 +507,7 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G05 - GHG disclosure gap
-    # =========================================================
 
     if gap_id == "G05":
 
@@ -563,9 +545,8 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
+    
     # G06 - GHG comparability gap
-    # =========================================================
 
     if gap_id == "G06":
 
@@ -616,9 +597,7 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G07 - GHG performance gap
-    # =========================================================
 
     if gap_id == "G07":
 
@@ -690,9 +669,7 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G08 - E-waste disclosure gap
-    # =========================================================
 
     if gap_id == "G08":
 
@@ -728,9 +705,7 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G09 - E-waste comparability gap
-    # =========================================================
 
     if gap_id == "G09":
 
@@ -783,10 +758,8 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G10 - Infrastructure-sharing
     # evidence/disclosure gap
-    # =========================================================
 
     if gap_id == "G10":
 
@@ -822,9 +795,7 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
     # G11 - Tower-fiberization evidence gap
-    # =========================================================
 
     if gap_id == "G11":
 
@@ -870,10 +841,9 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
+    
     # G12 - Government support / renewable
     # procurement gap
-    # =========================================================
 
     if gap_id == "G12":
 
@@ -904,9 +874,8 @@ def analyze_gap(
         return None
 
 
-    # =========================================================
+    
     # G13 - Diesel-use policy tension
-    # =========================================================
 
     if gap_id == "G13":
 
@@ -936,9 +905,7 @@ def analyze_gap(
     return None
 
 
-# =============================================================
 # ACTION RULE MATCHING
-# =============================================================
 
 def find_action_rules(
     gap_id,
@@ -986,9 +953,7 @@ def find_action_rules(
     return matches
 
 
-# =============================================================
 # BARRIER + CORRECTIVE ACTION MAPPING
-# =============================================================
 
 def apply_action_mapping(
     findings,
@@ -1114,9 +1079,7 @@ def apply_action_mapping(
     return mapped_findings
 
 
-# =============================================================
 # PRIORITY RULE MATCHING
-# =============================================================
 
 def find_priority_rule(
     gap_id,
@@ -1163,9 +1126,7 @@ def find_priority_rule(
     return None
 
 
-# =============================================================
 # SCORE CONVERSION
-# =============================================================
 
 def parse_score(value):
     """
@@ -1196,9 +1157,7 @@ def parse_score(value):
     return score
 
 
-# =============================================================
 # PRIORITY LEVEL
-# =============================================================
 
 def get_priority_level(score):
     """
@@ -1218,9 +1177,7 @@ def get_priority_level(score):
     return "Low"
 
 
-# =============================================================
 # PRIORITY SCORING
-# =============================================================
 
 def apply_priority_scoring(
     results,
@@ -1458,9 +1415,7 @@ def apply_priority_scoring(
     return prioritized_results
 
 
-# =============================================================
 # SORT PRIORITIZED RESULTS
-# =============================================================
 
 def sort_by_priority(results):
     """
@@ -1494,9 +1449,7 @@ def sort_by_priority(results):
     )
 
 
-# =============================================================
 # MAIN MODEL
-# =============================================================
 
 def run_model(
     operator=None,
@@ -1529,42 +1482,30 @@ def run_model(
             "results": []
         }
 
-    # =========================================================
     # 1. Load selected operator evidence
-    # =========================================================
 
     evidence_rows = load_operator_evidence(
         operator
     )
 
-    # =========================================================
     # 2. Load all operator evidence
-    # =========================================================
 
     all_evidence_rows = load_all_operator_evidence()
 
-    # =========================================================
     # 3. Load gap-analysis rules
-    # =========================================================
 
     gap_rules = load_gap_rules()
 
-    # =========================================================
     # 4. Load action rules
-    # =========================================================
 
     action_rules = load_action_rules()
 
-    # =========================================================
     # 5. Load priority rules
-    # =========================================================
 
     priority_rules = load_priority_rules()
 
 
-    # =========================================================
     # DEBUG INFORMATION
-    # =========================================================
 
     print("\n================ MODEL DEBUG ================")
     print("Operator:", operator)
@@ -1580,12 +1521,10 @@ def run_model(
             for rule in gap_rules
         ]
     )
-    print("=============================================\n")
+    print("\n")
 
 
-    # =========================================================
     # 6. GAP ANALYSIS
-    # =========================================================
 
     findings = []
 
@@ -1629,9 +1568,8 @@ def run_model(
                 )
             )
 
-    # =========================================================
     # DEBUG GAP FINDINGS
-    # =========================================================
+    
 
     print(
         "Gap findings generated:",
@@ -1646,18 +1584,14 @@ def run_model(
         ]
     )
 
-    # =========================================================
     # 7. BARRIER DIAGNOSIS + CORRECTIVE ACTION
-    # =========================================================
 
     results = apply_action_mapping(
         findings,
         action_rules
     )
 
-    # =========================================================
     # DEBUG ACTION MAPPING
-    # =========================================================
 
     print(
         "Results after action mapping:",
@@ -1715,9 +1649,8 @@ def run_model(
     if not ai_meta:
         results = sort_by_priority(results)
 
-    # =========================================================
+    
     # 10. RETURN MODEL OUTPUT
-    # =========================================================
 
     return {
       "findings": findings,
