@@ -197,9 +197,9 @@ def build_feature_table():
     return records, X, y_ref, w, {"lambda_max": lmax, "CI": ci, "CR": cr}
 
 
-# ==================================================================
+
 # 4. AUGMENTATION + MODEL TRAINING
-# ==================================================================
+
 def _augment(X, weights, n_copies=300, noise=0.30, seed=42):
     """
     Perturb the 4 MCDM scores, recompute TOPSIS reference.
@@ -240,9 +240,9 @@ def cross_validate_ranker(X, y, cv=5, seed=42):
             "cv_mae_std": float(scores.std())}
 
 
-# ==================================================================
+
 # 5. PRIORITY BAND
-# ==================================================================
+
 def priority_band(score):
     if score >= 0.75: return "Very High"
     if score >= 0.55: return "High"
@@ -322,9 +322,9 @@ def rank_actions():
     }
 
 
-# ==================================================================
+
 # 7. SCORE A BRAND-NEW GAP (no priority_rules entry needed)
-# ==================================================================
+
 def predict_new_action(gap_severity, barrier_severity,
                        environmental_impact, implementation_feasibility,
                        gap_type="", barrier_category="",
@@ -348,9 +348,9 @@ def predict_new_action(gap_severity, barrier_severity,
             "priority_level": priority_band(score)}
 
 
-# ==================================================================
+
 # 8. CLI TEST
-# ==================================================================
+
 if __name__ == "__main__":
     result = rank_actions()
     w = result["ahp"]
