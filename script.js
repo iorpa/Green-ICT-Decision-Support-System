@@ -149,9 +149,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-   
   // ADD EVIDENCE
 
+  
   dataForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -202,8 +202,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  
   // RUN DECISION-SUPPORT MODEL
+
   runModelBtn.addEventListener("click", async () => {
     analysisStatus.textContent = "Running decision-support model...";
 
@@ -482,6 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // START APPLICATION
+ 
 
   checkSession();
 });
