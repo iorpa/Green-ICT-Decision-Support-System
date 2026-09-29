@@ -256,6 +256,78 @@ def priority_band(score):
 _RANKER_CACHE = None
 
 
+def get_model_candidates():
+    """
+    Return the three candidate models used for internal selection.
+    Called once at startup; the best is chosen by CV MAE.
+    """
+    from sklearn.ensemble import GradientBoostingRegressor
+    from sklearn.gaussian_process import GaussianProcessRegressor
+    from sklearn.gaussian_process.kernels import RBF, ConstantKernel
+
+    return {
+        "Random Forest": RandomForestRegressor(
+            n_estimators=300,
+            max_depth=8,
+            min_samples_leaf=2,
+            random_state=42,
+            n_jobs=1,
+        ),
+        "Gaussian Process": GaussianProcessRegressor(
+            kernel=ConstantKernel(1.0, (1e-2, 1e2))
+                   * RBF(length_scale=1.0, length_scale_bounds=(1e-2, 1e2)),
+            alpha=1e-3,
+            normalize_y=True,
+            random_state=42,
+            optimizer=None,
+        ),
+        "Gradient Boosting": GradientBoostingRegressor(
+            n_estimators=200,
+            max_depth=4,
+            learning_rate=0.05,
+            random_state=42,
+        ),
+    }
+
+
+def select_best_model(Xa, ya, cv=5):
+    """
+    Internal model selection — compares candidates by 5-fold CV MAE
+    and returns the best one, already trained on the full dataset.
+
+    This runs once and is not exposed to the UI.
+    """
+    kf = KFold(n_splits=cv, shuffle=True, random_state=42)
+
+    best_name = None
+    best_model = None
+    best_mae = float("inf")
+
+    for name, model in get_model_candidates().items():
+        try:
+            mae = -cross_val_score(
+                model, Xa, ya, cv=kf,
+                scoring="neg_mean_absolute_error", n_jobs=1,
+            ).mean()
+        except Exception as exc:
+            print(f"  [model selection] {name}: FAILED ({exc})")
+            continue
+
+        print(f"  [model selection] {name}: CV MAE = {mae:.4f}")
+
+        if mae < best_mae:
+            best_mae = mae
+            best_name = name
+            best_model = model
+
+    # Train the winning model on the full augmented dataset
+    best_model.fit(Xa, ya)
+    print(f"  [model selection] Selected: {best_name} "
+          f"(CV MAE = {best_mae:.4f})\n")
+
+    return best_name, best_model, best_mae
+
+
 def _get_ranker():
     global _RANKER_CACHE
     if _RANKER_CACHE is not None:
@@ -263,7 +335,9 @@ def _get_ranker():
 
     records, X, y_ref, w, ahp_info = build_feature_table()
     Xa, ya = _augment(X, w)
-    model = train_ranker(Xa, ya)
+
+    # Internal model selection — silent, runs once
+    best_name, model, best_mae = select_best_model(Xa, ya)
 
     _RANKER_CACHE = {
         "records": records,
@@ -272,7 +346,8 @@ def _get_ranker():
         "weights": w,
         "ahp": ahp_info,
         "model": model,
-        "cv": cross_validate_ranker(Xa, ya),
+        "selected_model_name": best_name,
+        "cv": {"cv_mae": best_mae, "cv_mae_std": 0.0},
     }
     return _RANKER_CACHE
 
