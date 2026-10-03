@@ -98,7 +98,7 @@ def load_all_operator_evidence():
     """
     Load evidence for all operators.
 
-    Used internally for cross-operator gap analysis.
+    Used internally for cross-operator analysis.
     """
 
     return read_csv_file(OPERATOR_DATA_FILE)
@@ -109,25 +109,19 @@ def load_all_operator_evidence():
 # =============================================================
 
 def load_gap_rules():
-    """Load gap-analysis rules."""
+    """Load consolidated gap-analysis rules."""
 
     return read_csv_file(GAP_RULES_FILE)
 
 
 def load_action_rules():
-    """
-    Load barrier and corrective-action rules
-    from action_rules.csv.
-    """
+    """Load corrective-action rules."""
 
     return read_csv_file(ACTION_RULES_FILE)
 
 
 def load_priority_rules():
-    """
-    Load Decision-Support Model scoring rules
-    from priority_rules.csv.
-    """
+    """Load decision-support priority rules."""
 
     return read_csv_file(PRIORITY_RULES_FILE)
 
@@ -136,7 +130,11 @@ def load_priority_rules():
 # EVIDENCE SEARCH
 # =============================================================
 
-def find_evidence(evidence_rows, area=None, indicator=None):
+def find_evidence(
+    evidence_rows,
+    area=None,
+    indicator=None
+):
     """
     Find evidence matching an area and/or indicator.
     Matching is case-insensitive.
@@ -285,7 +283,7 @@ def build_finding(
 
 
 # =============================================================
-# GAP ANALYSIS
+# CONSOLIDATED GAP ANALYSIS
 # =============================================================
 
 def analyze_gap(
@@ -295,236 +293,273 @@ def analyze_gap(
     all_evidence_rows
 ):
     """
-    Apply one gap-analysis rule.
+    Apply one of the eight consolidated gap-analysis rules.
 
-    This function performs Gap Analysis only.
+    IMPORTANT:
+    Each G01-G08 produces at most ONE consolidated finding
+    for each operator.
 
-    It does NOT perform:
-
-    - barrier diagnosis
-    - corrective-action mapping
-    - priority scoring
+    G01 - Inconsistent Green ICT measurement
+    G02 - Missing GHG and e-waste data
+    G03 - Rising energy consumption and emissions
+    G04 - Limited physical renewable-energy adoption
+    G05 - Renewable procurement barriers
+    G06 - Infrastructure-sharing evidence gap
+    G07 - Organizational implementation weakness
+    G08 - Weak policy measurability
     """
 
     gap_id = get_rule_id(rule)
 
     # =========================================================
-    # G01 - Energy-efficiency measurement gap
+    # G01 - Inconsistent Green ICT measurement
     # =========================================================
 
     if gap_id == "G01":
 
         return [{
-            "area": "Energy Efficiency",
+            "area": "Green ICT Measurement",
+
             "indicator": (
-                "Energy-efficiency performance indicators"
+                "Green ICT KPIs and reporting indicators"
             ),
+
             "value": "Not standardized",
+
             "unit": "",
+
             "source": "",
+
             "notes": (
-                "Policy-level measurement gap."
+                "Operators use different Green ICT "
+                "indicators, units, baselines, and "
+                "reporting levels. This represents a "
+                "measurement and comparability gap."
             )
         }]
 
-
     # =========================================================
-    # G02 - Energy-efficiency comparability gap
+    # G02 - Missing GHG and e-waste data
     # =========================================================
 
     if gap_id == "G02":
 
-        operator_rows = [
-            row
-            for row in all_evidence_rows
-            if operator_matches(
-                row.get("operator"),
-                operator
-            )
-        ]
+        relevant = []
 
-        energy_rows = [
-            row
-            for row in operator_rows
-            if normalize_text(
+        for row in evidence_rows:
+
+            area = normalize_text(
                 row.get("area", "")
-            ) == "energy efficiency"
-        ]
+            )
 
-        comparable_indicators = []
+            indicator = normalize_text(
+                row.get("indicator", "")
+            )
 
-        for row in energy_rows:
+            combined_text = (
+                area + " " + indicator
+            )
+
+            if (
+                "ghg" in combined_text
+                or "carbon" in combined_text
+                or "e-waste" in combined_text
+                or "waste" in combined_text
+            ):
+
+                if is_missing(
+                    row.get("value")
+                ):
+
+                    relevant.append(row)
+
+        # -----------------------------------------------------
+        # IMPORTANT:
+        # Several evidence rows may support G02.
+        # They are consolidated into ONE G02 finding.
+        # -----------------------------------------------------
+
+        source = ""
+
+        for row in relevant:
+
+            if str(
+                row.get(
+                    "source",
+                    ""
+                )
+            ).strip():
+
+                source = row.get(
+                    "source",
+                    ""
+                )
+
+                break
+
+        return [{
+            "area": "GHG / E-waste Management",
+
+            "indicator": (
+                "Operator-level GHG emissions "
+                "and e-waste information"
+            ),
+
+            "value": "Not sufficiently disclosed",
+
+            "unit": "",
+
+            "source": source,
+
+            "notes": (
+                "Operator-level GHG and e-waste "
+                "information is incomplete or "
+                "reported using different scopes, "
+                "measures, or classifications."
+            )
+        }]
+
+    # =========================================================
+    # G03 - Rising energy consumption and emissions
+    # =========================================================
+
+    if gap_id == "G03":
+
+        energy_rows = []
+
+        for row in evidence_rows:
+
+            area = normalize_text(
+                row.get("area", "")
+            )
 
             indicator = normalize_text(
                 row.get("indicator", "")
             )
 
             if (
-                "energy savings" in indicator
-                or "energy reduction" in indicator
+                "energy" in area
+                or "energy consumption" in indicator
+                or "fuel" in indicator
+                or "emission" in indicator
             ):
 
                 if not is_missing(
                     row.get("value")
                 ):
 
-                    comparable_indicators.append(
-                        row
-                    )
+                    energy_rows.append(row)
 
-        if not comparable_indicators:
+        source = ""
 
-            other_operator_has_quantitative = False
+        if energy_rows:
 
-            for row in all_evidence_rows:
+            source = energy_rows[0].get(
+                "source",
+                ""
+            )
 
-                row_operator = normalize_operator(
-                    row.get("operator")
-                )
+            value = "Rising environmental pressure"
+
+            notes = (
+                "Energy demand and associated "
+                "emissions remain important "
+                "environmental concerns despite "
+                "existing efficiency measures."
+            )
+
+        else:
+
+            value = "Requires improved management"
+
+            notes = (
+                "Improved network energy efficiency "
+                "and energy-demand management are "
+                "required."
+            )
+
+        return [{
+            "area": "Energy Efficiency",
+
+            "indicator": (
+                "Energy consumption and "
+                "associated emissions"
+            ),
+
+            "value": value,
+
+            "unit": "",
+
+            "source": source,
+
+            "notes": notes
+        }]
+
+    # =========================================================
+    # G04 - Limited physical renewable-energy adoption
+    # =========================================================
+
+    if gap_id == "G04":
+
+        renewable_rows = []
+
+        for row in evidence_rows:
+
+            area = normalize_text(
+                row.get("area", "")
+            )
+
+            indicator = normalize_text(
+                row.get("indicator", "")
+            )
+
+            if area == "renewable energy":
 
                 if (
-                    row_operator
-                    == normalize_operator(operator)
-                ):
-                    continue
-
-                area = normalize_text(
-                    row.get("area", "")
-                )
-
-                indicator = normalize_text(
-                    row.get("indicator", "")
-                )
-
-                if area != "energy efficiency":
-                    continue
-
-                if (
-                    "energy savings" in indicator
-                    or "energy reduction" in indicator
+                    "solar" in indicator
+                    or "hybrid" in indicator
+                    or "renewable" in indicator
+                    or "site" in indicator
                 ):
 
                     if not is_missing(
                         row.get("value")
                     ):
 
-                        other_operator_has_quantitative = True
-                        break
+                        renewable_rows.append(row)
 
-            if other_operator_has_quantitative:
+        source = ""
 
-                return [{
-                    "area": "Energy Efficiency",
-                    "indicator": (
-                        "Energy savings and energy "
-                        "reduction indicators"
-                    ),
-                    "value": (
-                        "Not sufficiently comparable"
-                    ),
-                    "unit": "",
-                    "source": "",
-                    "notes": (
-                        "Comparable quantitative "
-                        "energy-efficiency evidence "
-                        "is not sufficiently disclosed "
-                        "for the selected operator."
-                    )
-                }]
+        if renewable_rows:
 
-        return None
-
-
-    # =========================================================
-    # G03 - Renewable-energy reporting comparability gap
-    # =========================================================
-
-    if gap_id == "G03":
-
-        renewable_rows = [
-            row
-            for row in all_evidence_rows
-            if normalize_text(
-                row.get("area", "")
-            ) == "renewable energy"
-        ]
-
-        reporting_units = set()
-
-        for row in renewable_rows:
-
-            value = row.get("value")
-
-            unit = normalize_text(
-                row.get("unit", "")
+            source = renewable_rows[0].get(
+                "source",
+                ""
             )
 
-            if not is_missing(value):
+        return [{
+            "area": "Renewable Energy",
 
-                if unit:
-                    reporting_units.add(unit)
+            "indicator": (
+                "Physical solar and hybrid "
+                "renewable-energy deployment"
+            ),
 
-        if len(reporting_units) > 1:
+            "value": "Limited or uneven adoption",
 
-            return [{
-                "area": "Renewable Energy",
-                "indicator": (
-                    "Renewable-energy adoption, "
-                    "generation and capacity"
-                ),
-                "value": (
-                    "Different reporting measures "
-                    "and units"
-                ),
-                "unit": "",
-                "source": "",
-                "notes": (
-                    "Operators report renewable-energy "
-                    "adoption using different measures "
-                    "and units."
-                )
-            }]
+            "unit": "",
 
-        return None
+            "source": source,
 
-
-    # =========================================================
-    # G04 - Renewable-energy procurement
-    # implementation gap
-    # =========================================================
-
-    if gap_id == "G04":
-
-        relevant = []
-
-        for row in evidence_rows:
-
-            indicator = normalize_text(
-                row.get("indicator", "")
+            "notes": (
+                "Physical renewable-energy deployment "
+                "remains limited or uneven across "
+                "network sites."
             )
-
-            value = normalize_text(
-                row.get("value", "")
-            )
-
-            if "cppa" in indicator:
-
-                if (
-                    "pending" in value
-                    or "unresolved" in value
-                    or "not available" in value
-                ):
-
-                    relevant.append(row)
-
-        if relevant:
-            return relevant
-
-        return None
-
+        }]
 
     # =========================================================
-    # G05 - GHG disclosure gap
+    # G05 - Renewable procurement barriers
     # =========================================================
 
     if gap_id == "G05":
@@ -533,354 +568,6 @@ def analyze_gap(
 
         for row in evidence_rows:
 
-            area = normalize_text(
-                row.get("area", "")
-            )
-
-            indicator = normalize_text(
-                row.get("indicator", "")
-            )
-
-            if area != "ghg / carbon reduction":
-                continue
-
-            if (
-                "ghg" in indicator
-                or "scope 1+2" in indicator
-                or "scope 1" in indicator
-                or "carbon emission" in indicator
-            ):
-
-                if is_missing(
-                    row.get("value")
-                ):
-
-                    relevant.append(row)
-
-        if relevant:
-            return relevant
-
-        return None
-
-
-    # =========================================================
-    # G06 - GHG comparability gap
-    # =========================================================
-
-    if gap_id == "G06":
-
-        ghg_rows = [
-            row
-            for row in all_evidence_rows
-            if normalize_text(
-                row.get("area", "")
-            ) == "ghg / carbon reduction"
-        ]
-
-        operators_with_ghg_data = set()
-
-        for row in ghg_rows:
-
-            if not is_missing(
-                row.get("value")
-            ):
-
-                operator_name = normalize_operator(
-                    row.get("operator")
-                )
-
-                operators_with_ghg_data.add(
-                    operator_name
-                )
-
-        if len(operators_with_ghg_data) >= 2:
-
-            return [{
-                "area": "GHG / Carbon Reduction",
-                "indicator": (
-                    "GHG emissions measures, "
-                    "baselines and targets"
-                ),
-                "value": (
-                    "Not sufficiently comparable"
-                ),
-                "unit": "",
-                "source": "",
-                "notes": (
-                    "Operators use different GHG "
-                    "measures, baselines and "
-                    "reporting levels."
-                )
-            }]
-
-        return None
-
-
-    # =========================================================
-    # G07 - GHG performance gap
-    # =========================================================
-
-    if gap_id == "G07":
-
-        if normalize_operator(
-            operator
-        ) != "grameenphone":
-
-            return None
-
-        emissions_rows = [
-            row
-            for row in evidence_rows
-            if normalize_text(
-                row.get("indicator", "")
-            ) == "scope 1+2 emissions"
-        ]
-
-        target_rows = [
-            row
-            for row in evidence_rows
-            if "scope 1+2 reduction target"
-            in normalize_text(
-                row.get("indicator", "")
-            )
-        ]
-
-        if emissions_rows and target_rows:
-
-            emissions_value = str(
-                emissions_rows[0].get(
-                    "value",
-                    ""
-                )
-            ).strip()
-
-            target_value = str(
-                target_rows[0].get(
-                    "value",
-                    ""
-                )
-            ).strip()
-
-            return [{
-                "area": "GHG / Carbon Reduction",
-                "indicator": (
-                    "Operator-specific GHG reduction "
-                    "target and reported performance"
-                ),
-                "value": (
-                    f"2025 Scope 1+2 emissions: "
-                    f"{emissions_value}; "
-                    f"2030 reduction target: "
-                    f"{target_value}"
-                ),
-                "unit": "",
-                "source": emissions_rows[0].get(
-                    "source",
-                    ""
-                ),
-                "notes": (
-                    "Performance gap assessed against "
-                    "the operator's own stated reduction "
-                    "target/pathway. This does not by "
-                    "itself establish BTRC policy "
-                    "non-compliance."
-                )
-            }]
-
-        return None
-
-
-    # =========================================================
-    # G08 - E-waste disclosure gap
-    # =========================================================
-
-    if gap_id == "G08":
-
-        relevant = []
-
-        for row in evidence_rows:
-
-            area = normalize_text(
-                row.get("area", "")
-            )
-
-            indicator = normalize_text(
-                row.get("indicator", "")
-            )
-
-            if area != "e-waste management":
-                continue
-
-            if (
-                "e-waste" in indicator
-                or "waste" in indicator
-            ):
-
-                if is_missing(
-                    row.get("value")
-                ):
-
-                    relevant.append(row)
-
-        if relevant:
-            return relevant
-
-        return None
-
-
-    # =========================================================
-    # G09 - E-waste comparability gap
-    # =========================================================
-
-    if gap_id == "G09":
-
-        ewaste_rows = [
-            row
-            for row in all_evidence_rows
-            if normalize_text(
-                row.get("area", "")
-            ) == "e-waste management"
-        ]
-
-        if ewaste_rows:
-
-            operators_with_data = set()
-
-            for row in ewaste_rows:
-
-                if not is_missing(
-                    row.get("value")
-                ):
-
-                    operators_with_data.add(
-                        normalize_operator(
-                            row.get("operator")
-                        )
-                    )
-
-            if len(operators_with_data) >= 1:
-
-                return [{
-                    "area": "E-waste Management",
-                    "indicator": (
-                        "E-waste collection, recycling "
-                        "and disposal reporting"
-                    ),
-                    "value": (
-                        "Not sufficiently comparable"
-                    ),
-                    "unit": "",
-                    "source": "",
-                    "notes": (
-                        "Operators provide different "
-                        "levels of detail and do not "
-                        "consistently report comparable "
-                        "telecom-specific e-waste "
-                        "quantities."
-                    )
-                }]
-
-        return None
-
-
-    # =========================================================
-    # G10 - Infrastructure-sharing
-    # evidence/disclosure gap
-    # =========================================================
-
-    if gap_id == "G10":
-
-        relevant = [
-            row
-            for row in evidence_rows
-            if normalize_text(
-                row.get("area", "")
-            ) == "infrastructure sharing"
-        ]
-
-        if not relevant:
-
-            return [{
-                "area": "Infrastructure Sharing",
-                "indicator": (
-                    "Tower, fibre, radio-network and "
-                    "other infrastructure sharing"
-                ),
-                "value": (
-                    "Not sufficiently disclosed"
-                ),
-                "unit": "",
-                "source": "",
-                "notes": (
-                    "Policy supports infrastructure "
-                    "sharing, but sufficient quantitative "
-                    "operator-level evidence is not "
-                    "available."
-                )
-            }]
-
-        return None
-
-
-    # =========================================================
-    # G11 - Tower-fiberization evidence gap
-    # =========================================================
-
-    if gap_id == "G11":
-
-        relevant = [
-            row
-            for row in evidence_rows
-            if (
-                "fiber"
-                in normalize_text(
-                    row.get("indicator", "")
-                )
-                or
-                "fibre"
-                in normalize_text(
-                    row.get("indicator", "")
-                )
-            )
-        ]
-
-        if not relevant:
-
-            return [{
-                "area": "Tower Fiberization",
-                "indicator": (
-                    "Percentage of mobile towers "
-                    "fiberized"
-                ),
-                "value": (
-                    "Not sufficiently disclosed"
-                ),
-                "unit": "",
-                "source": "",
-                "notes": (
-                    "Policy sets measurable "
-                    "fiberization targets, but "
-                    "sufficient operator-level data "
-                    "are unavailable to verify progress. "
-                    "This is an Evidence Gap, not a "
-                    "finding of non-compliance."
-                )
-            }]
-
-        return None
-
-
-    # =========================================================
-    # G12 - Government support / renewable
-    # procurement gap
-    # =========================================================
-
-    if gap_id == "G12":
-
-        relevant = []
-
-        for row in evidence_rows:
-
             indicator = normalize_text(
                 row.get("indicator", "")
             )
@@ -889,49 +576,184 @@ def analyze_gap(
                 row.get("value", "")
             )
 
-            if "cppa" in indicator:
+            if (
+                "cppa" in indicator
+                or "renewable procurement" in indicator
+                or "power purchase" in indicator
+            ):
 
                 if (
                     "pending" in value
                     or "unresolved" in value
+                    or "not available" in value
+                    or "barrier" in value
                 ):
 
                     relevant.append(row)
 
-        if relevant:
-            return relevant
+        # -----------------------------------------------------
+        # Consolidate multiple supporting rows into ONE G05.
+        # -----------------------------------------------------
 
-        return None
+        source = ""
 
+        for row in relevant:
 
-    # =========================================================
-    # G13 - Diesel-use policy tension
-    # =========================================================
+            if str(
+                row.get(
+                    "source",
+                    ""
+                )
+            ).strip():
 
-    if gap_id == "G13":
+                source = row.get(
+                    "source",
+                    ""
+                )
+
+                break
 
         return [{
-            "area": (
-                "Network Resilience / "
-                "Carbon Reduction"
-            ),
+            "area": "Renewable Energy Procurement",
+
             "indicator": (
-                "Diesel backup generation at "
-                "disaster-prone tower sites"
+                "CPPA and renewable-electricity "
+                "procurement"
             ),
-            "value": (
-                "25% policy requirement"
-            ),
+
+            "value": "Procurement barriers identified",
+
             "unit": "",
-            "source": "",
+
+            "source": source,
+
             "notes": (
-                "Policy tension between network "
-                "resilience and carbon reduction. "
-                "Diesel backup supports resilience "
-                "but can increase fuel consumption "
-                "and emissions."
+                "Renewable electricity procurement "
+                "can be constrained by regulatory, "
+                "contractual, and implementation "
+                "mechanisms."
             )
         }]
+
+    # =========================================================
+    # G06 - Infrastructure-sharing evidence gap
+    # =========================================================
+
+    if gap_id == "G06":
+
+        relevant = [
+            row
+            for row in evidence_rows
+            if (
+                "infrastructure sharing"
+                in normalize_text(
+                    row.get("area", "")
+                )
+            )
+        ]
+
+        source = ""
+
+        for row in relevant:
+
+            if str(
+                row.get(
+                    "source",
+                    ""
+                )
+            ).strip():
+
+                source = row.get(
+                    "source",
+                    ""
+                )
+
+                break
+
+        return [{
+            "area": "Infrastructure Sharing",
+
+            "indicator": (
+                "Tower, fibre, and other "
+                "infrastructure sharing"
+            ),
+
+            "value": "Insufficient quantitative evidence",
+
+            "unit": "",
+
+            "source": source,
+
+            "notes": (
+                "Insufficient quantitative operator-level "
+                "evidence is available to assess "
+                "infrastructure-sharing coverage and "
+                "resource-efficiency benefits."
+            )
+        }]
+
+    # =========================================================
+    # G07 - Organizational implementation weakness
+    # =========================================================
+
+    if gap_id == "G07":
+
+        return [{
+            "area": "Organizational Implementation",
+
+            "indicator": (
+                "Green ICT responsibilities, monitoring, "
+                "coordination, and accountability"
+            ),
+
+            "value": "Requires stronger implementation",
+
+            "unit": "",
+
+            "source": "",
+
+            "notes": (
+                "Differences in organizational "
+                "responsibilities, monitoring, "
+                "coordination, and accountability "
+                "can limit consistent Green ICT "
+                "implementation."
+            )
+        }]
+
+    # =========================================================
+    # G08 - Weak policy measurability
+    # =========================================================
+
+    if gap_id == "G08":
+
+        return [{
+            "area": "Policy and Regulation",
+
+            "indicator": (
+                "Green ICT targets, timelines, "
+                "monitoring, and verification"
+            ),
+
+            "value": (
+                "Requires clearer measurable requirements"
+            ),
+
+            "unit": "",
+
+            "source": "",
+
+            "notes": (
+                "Green ICT requirements need clearer "
+                "quantitative targets, timelines, "
+                "monitoring arrangements, and "
+                "verification mechanisms."
+            )
+        }]
+
+    # =========================================================
+    # UNKNOWN GAP
+    # =========================================================
 
     return None
 
@@ -945,8 +767,16 @@ def find_action_rules(
     action_rules
 ):
     """
-    Find corrective-action rules associated
-    with a gap ID.
+    Map consolidated gaps to corrective actions.
+
+    G01 -> A01
+    G02 -> A02
+    G03 -> A03
+    G04 -> A04
+    G05 -> A05
+    G06 -> A06
+    G07 -> A07
+    G08 -> A08
     """
 
     gap_id = str(
@@ -1124,8 +954,8 @@ def find_priority_rule(
     priority_rules
 ):
     """
-    Find the priority-scoring rule for
-    a specific gap and corrective action.
+    Find the priority-scoring rule for a
+    specific gap and corrective action.
     """
 
     gap_id = str(
@@ -1191,6 +1021,7 @@ def parse_score(value):
         return None
 
     if score < 1 or score > 5:
+
         return None
 
     return score
@@ -1227,7 +1058,7 @@ def apply_priority_scoring(
     priority_rules
 ):
     """
-    Apply the Decision-Support Model.
+    Apply the rule-based Decision-Support Model.
 
     Criteria:
 
@@ -1240,6 +1071,12 @@ def apply_priority_scoring(
 
     Priority Score =
         (GS + BS + EI + IF) / 4
+
+    This score is retained as the rule-based
+    reference/audit score.
+
+    AI prioritization is performed separately
+    by ai_ranker.py.
     """
 
     prioritized_results = []
@@ -1269,6 +1106,10 @@ def apply_priority_scoring(
         enriched_result = dict(
             result
         )
+
+        # -----------------------------------------------------
+        # No priority rule
+        # -----------------------------------------------------
 
         if not priority_rule:
 
@@ -1301,6 +1142,10 @@ def apply_priority_scoring(
 
             continue
 
+        # -----------------------------------------------------
+        # Parse four criteria
+        # -----------------------------------------------------
+
         gs = parse_score(
             priority_rule.get(
                 "gap_severity"
@@ -1324,6 +1169,10 @@ def apply_priority_scoring(
                 "implementation_feasibility"
             )
         )
+
+        # -----------------------------------------------------
+        # Invalid score handling
+        # -----------------------------------------------------
 
         if (
             gs is None
@@ -1393,6 +1242,10 @@ def apply_priority_scoring(
 
             continue
 
+        # -----------------------------------------------------
+        # Calculate rule-based priority score
+        # -----------------------------------------------------
+
         priority_score = (
             gs
             + bs
@@ -1408,6 +1261,10 @@ def apply_priority_scoring(
         priority_level = get_priority_level(
             priority_score
         )
+
+        # -----------------------------------------------------
+        # Store scores
+        # -----------------------------------------------------
 
         enriched_result.update({
 
@@ -1464,8 +1321,8 @@ def apply_priority_scoring(
 
 def sort_by_priority(results):
     """
-    Sort results from highest priority score
-    to lowest priority score.
+    Sort results from highest rule-based priority
+    score to lowest.
 
     Results without a valid score are placed last.
     """
@@ -1478,6 +1335,7 @@ def sort_by_priority(results):
         )
 
         try:
+
             return float(score)
 
         except (
@@ -1491,6 +1349,45 @@ def sort_by_priority(results):
         results,
         key=priority_value,
         reverse=True
+    )
+
+
+# =============================================================
+# REMOVE DUPLICATE CONSOLIDATED GAPS
+# =============================================================
+
+def ensure_one_finding_per_gap(findings):
+    """
+    Ensure that the consolidated model contains only one
+    finding for each gap ID.
+
+    Expected:
+        G01, G02, G03, G04, G05, G06, G07, G08
+
+    This is a final safety layer. It prevents duplicate
+    evidence rows from creating duplicate consolidated gaps.
+    """
+
+    unique_findings = {}
+
+    for finding in findings:
+
+        gap_id = str(
+            finding.get(
+                "gap_id",
+                ""
+            )
+        ).strip().upper()
+
+        if not gap_id:
+            continue
+
+        if gap_id not in unique_findings:
+
+            unique_findings[gap_id] = finding
+
+    return list(
+        unique_findings.values()
     )
 
 
@@ -1511,22 +1408,25 @@ def run_model(
           ↓
     Gap Analysis
           ↓
-    Identified Gap
+    8 Consolidated Gaps
           ↓
     Barrier Diagnosis
           ↓
-    Corrective Action
+    8 Corrective Actions
           ↓
-    Priority Scoring
+    Rule-Based Priority Scoring
           ↓
-    Priority Level
+    AHP → TOPSIS → Regression
+          ↓
+    AI Priority Ranking
     """
 
     if not operator:
 
         return {
             "findings": [],
-            "results": []
+            "results": [],
+            "ai_meta": {}
         }
 
     # =========================================================
@@ -1561,18 +1461,42 @@ def run_model(
 
     priority_rules = load_priority_rules()
 
-
     # =========================================================
     # DEBUG INFORMATION
     # =========================================================
 
     print("\n================ MODEL DEBUG ================")
-    print("Operator:", operator)
-    print("Operator evidence rows:", len(evidence_rows))
-    print("All evidence rows:", len(all_evidence_rows))
-    print("Gap rules loaded:", len(gap_rules))
-    print("Action rules loaded:", len(action_rules))
-    print("Priority rules loaded:", len(priority_rules))
+
+    print(
+        "Operator:",
+        operator
+    )
+
+    print(
+        "Operator evidence rows:",
+        len(evidence_rows)
+    )
+
+    print(
+        "All evidence rows:",
+        len(all_evidence_rows)
+    )
+
+    print(
+        "Gap rules loaded:",
+        len(gap_rules)
+    )
+
+    print(
+        "Action rules loaded:",
+        len(action_rules)
+    )
+
+    print(
+        "Priority rules loaded:",
+        len(priority_rules)
+    )
+
     print(
         "Gap rule IDs:",
         [
@@ -1580,8 +1504,29 @@ def run_model(
             for rule in gap_rules
         ]
     )
-    print("=============================================\n")
 
+    print(
+        "Action rule IDs:",
+        [
+            rule.get("action_id")
+            for rule in action_rules
+        ]
+    )
+
+    print(
+        "Priority rule IDs:",
+        [
+            (
+                rule.get("gap_id"),
+                rule.get("action_id")
+            )
+            for rule in priority_rules
+        ]
+    )
+
+    print(
+        "=============================================\n"
+    )
 
     # =========================================================
     # 6. GAP ANALYSIS
@@ -1630,6 +1575,14 @@ def run_model(
             )
 
     # =========================================================
+    # 6A. FINAL CONSOLIDATION SAFETY CHECK
+    # =========================================================
+
+    findings = ensure_one_finding_per_gap(
+        findings
+    )
+
+    # =========================================================
     # DEBUG GAP FINDINGS
     # =========================================================
 
@@ -1672,55 +1625,345 @@ def run_model(
         ]
     )
 
-        # 8. Rule-based scoring (kept for audit trail)
-    results = apply_priority_scoring(results, priority_rules)
+    # =========================================================
+    # 8. RULE-BASED PRIORITY SCORING
+    # =========================================================
 
-    # 8b. AI prioritization
-    try:
-        ai_output = ai_rank_actions()
-        ai_lookup = {
-            (a["gap_id"], a["action_id"]): a
-            for a in ai_output["ranked_actions"]
-        }
-        for r in results:
-            key = (str(r.get("gap_id", "")).upper(),
-                   str(r.get("action_id", "")).upper())
-            ai = ai_lookup.get(key)
-            if ai:
-                r["ai_priority_score"] = ai["ai_priority_score"]
-                r["ai_priority_level"] = ai["priority_level"]
-                r["ai_rank"]           = ai["rank"]
-                r["explanation"]       = ai["explanation"]
-            else:
-                r["ai_priority_score"] = ""
-                r["ai_priority_level"] = ""
-                r["ai_rank"]           = ""
-                r["explanation"]       = ""
-
-        # sort by AI rank (fallback to old score)
-        results.sort(
-            key=lambda r: (r.get("ai_rank") or 9999)
-        )
-
-        ai_meta = {
-            "ahp": ai_output["ahp"],
-            "cv_mae": ai_output["cv_mae"],
-            "top_features": ai_output["top_features"],
-        }
-    except Exception:
-        app_logger = None  # silent fallback
-        ai_meta = {}
-
-    # 9. old sort only if AI failed
-    if not ai_meta:
-        results = sort_by_priority(results)
+    results = apply_priority_scoring(
+        results,
+        priority_rules
+    )
 
     # =========================================================
-    # 10. RETURN MODEL OUTPUT
+    # 9. AI PRIORITIZATION
+    # =========================================================
+
+    ai_meta = {}
+
+    try:
+
+        ai_output = ai_rank_actions()
+
+        if not isinstance(
+            ai_output,
+            dict
+        ):
+
+            raise ValueError(
+                "AI ranker returned an invalid result."
+            )
+
+        ranked_actions = ai_output.get(
+            "ranked_actions",
+            []
+        )
+
+        ai_lookup = {}
+
+        for action in ranked_actions:
+
+            gap_id = str(
+                action.get(
+                    "gap_id",
+                    ""
+                )
+            ).strip().upper()
+
+            action_id = str(
+                action.get(
+                    "action_id",
+                    ""
+                )
+            ).strip().upper()
+
+            if not gap_id or not action_id:
+                continue
+
+            ai_lookup[
+                (gap_id, action_id)
+            ] = action
+
+        # -----------------------------------------------------
+        # Merge AI results
+        # -----------------------------------------------------
+
+        for result in results:
+
+            key = (
+                str(
+                    result.get(
+                        "gap_id",
+                        ""
+                    )
+                ).strip().upper(),
+
+                str(
+                    result.get(
+                        "action_id",
+                        ""
+                    )
+                ).strip().upper()
+            )
+
+            ai = ai_lookup.get(
+                key
+            )
+
+            if ai:
+
+                result["ai_priority_score"] = (
+                    ai.get(
+                        "ai_priority_score",
+                        ""
+                    )
+                )
+
+                result["ai_priority_level"] = (
+                    ai.get(
+                        "priority_level",
+                        ""
+                    )
+                )
+
+                result["ai_rank"] = (
+                    ai.get(
+                        "rank",
+                        9999
+                    )
+                )
+
+                result["explanation"] = (
+                    ai.get(
+                        "explanation",
+                        ""
+                    )
+                )
+
+            else:
+
+                result["ai_priority_score"] = ""
+                result["ai_priority_level"] = ""
+                result["ai_rank"] = 9999
+                result["explanation"] = ""
+
+        # -----------------------------------------------------
+        # Sort by AI rank
+        # -----------------------------------------------------
+
+        def safe_ai_rank(result):
+
+            rank = result.get(
+                "ai_rank",
+                9999
+            )
+
+            try:
+
+                return int(rank)
+
+            except (
+                TypeError,
+                ValueError
+            ):
+
+                return 9999
+
+        results.sort(
+            key=safe_ai_rank
+        )
+
+        # -----------------------------------------------------
+        # AI metadata
+        # -----------------------------------------------------
+
+        ai_meta = {
+            "ahp": ai_output.get(
+                "ahp",
+                {}
+            ),
+
+            "cv_mae": ai_output.get(
+                "cv_mae",
+                None
+            ),
+
+            "top_features": ai_output.get(
+                "top_features",
+                []
+            )
+        }
+
+    except Exception as error:
+
+        print(
+            "AI ranking failed:",
+            error
+        )
+
+        ai_meta = {}
+
+        # -----------------------------------------------------
+        # Rule-based fallback
+        # -----------------------------------------------------
+
+        for result in results:
+
+            result["ai_priority_score"] = ""
+            result["ai_priority_level"] = ""
+            result["ai_rank"] = ""
+            result["explanation"] = ""
+
+    # =========================================================
+    # 10. FALLBACK TO RULE-BASED SORT
+    # =========================================================
+
+    if not ai_meta:
+
+        results = sort_by_priority(
+            results
+        )
+
+    # =========================================================
+    # FINAL DEBUG
+    # =========================================================
+
+    print(
+        "\n================ FINAL RESULTS ================"
+    )
+
+    print(
+        "Total findings:",
+        len(findings)
+    )
+
+    print(
+        "Total results:",
+        len(results)
+    )
+
+    print(
+        "Final actions:",
+        [
+            result.get("action_id")
+            for result in results
+        ]
+    )
+
+    print(
+        "AI ranking available:",
+        bool(ai_meta)
+    )
+
+    if ai_meta:
+
+        print(
+            "Selected model CV MAE:",
+            ai_meta.get(
+                "cv_mae"
+            )
+        )
+
+    print(
+        "================================================\n"
+    )
+
+    # =========================================================
+    # 11. RETURN MODEL OUTPUT
     # =========================================================
 
     return {
-      "findings": findings,
-      "results": results,
-      "ai_meta": ai_meta,   # NEW
+        "findings": findings,
+        "results": results,
+        "ai_meta": ai_meta
     }
+
+
+# =============================================================
+# DIRECT SCRIPT EXECUTION
+# =============================================================
+
+if __name__ == "__main__":
+
+    print(
+        "\n=============================================="
+    )
+
+    print(
+        "Green ICT Decision-Support Model"
+    )
+
+    print(
+        "==============================================\n"
+    )
+
+    operators = [
+        "Grameenphone",
+        "Banglalink",
+        "Robi"
+    ]
+
+    for operator in operators:
+
+        print(
+            "\n----------------------------------------------"
+        )
+
+        print(
+            "Running model for:",
+            operator
+        )
+
+        print(
+            "----------------------------------------------"
+        )
+
+        output = run_model(
+            operator=operator
+        )
+
+        print(
+            "\nResults for",
+            operator
+        )
+
+        print(
+            "-" * 100
+        )
+
+        for result in output["results"]:
+
+            print(
+                result.get(
+                    "ai_rank",
+                    ""
+                ),
+                "|",
+                result.get(
+                    "action_id",
+                    ""
+                ),
+                "|",
+                result.get(
+                    "identified_problem",
+                    ""
+                ),
+                "| Rule:",
+                result.get(
+                    "priority_score",
+                    ""
+                ),
+                "| AI:",
+                result.get(
+                    "ai_priority_score",
+                    ""
+                ),
+                "|",
+                result.get(
+                    "ai_priority_level",
+                    ""
+                )
+            )
+
+        print(
+            "-" * 100
+        )

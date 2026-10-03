@@ -6,11 +6,23 @@ import secrets
 
 from model import run_model
 
+
+# ============================================================
+# BASE CONFIGURATION
+# ============================================================
+
 BASE_DIR = Path(__file__).resolve().parent
 
 app = Flask(__name__)
 
-app.secret_key = secrets.token_hex(32)
+# Development/demo secret key.
+# For production, use an environment variable instead.
+app.secret_key = "green-ict-demo-secret-key-2026"
+
+
+# ============================================================
+# FILE CONFIGURATION
+# ============================================================
 
 OPERATOR_DATA_FILE = BASE_DIR / "operator_data.csv"
 
@@ -26,13 +38,26 @@ OPERATOR_DATA_HEADERS = [
     "notes",
 ]
 
+
+# ============================================================
+# OPERATOR LOGIN ACCOUNTS
+# ============================================================
+
 OPERATOR_ACCOUNTS = {
     "Grameenphone": "GP2026",
     "Banglalink": "BL2026",
     "Robi": "RO2026",
 }
 
+
+# ============================================================
+# CSV FUNCTIONS
+# ============================================================
+
 def create_operator_csv():
+    """
+    Create operator_data.csv if it does not already exist.
+    """
 
     if not OPERATOR_DATA_FILE.exists():
 
@@ -47,6 +72,9 @@ def create_operator_csv():
 
 
 def read_operator_rows():
+    """
+    Read all operator evidence rows from CSV.
+    """
 
     create_operator_csv()
 
@@ -59,12 +87,22 @@ def read_operator_rows():
         return list(csv.DictReader(file))
 
 
+# ============================================================
+# OPERATOR NORMALIZATION
+# ============================================================
+
 def normalize_operator(value):
+    """
+    Normalize operator names for safe comparison.
+    """
 
     return str(value or "").strip().casefold()
 
 
 def operator_matches(row_operator, session_operator):
+    """
+    Check whether a CSV row belongs to the logged-in operator.
+    """
 
     return (
         normalize_operator(row_operator)
@@ -72,7 +110,14 @@ def operator_matches(row_operator, session_operator):
     )
 
 
+# ============================================================
+# LOGIN DECORATOR
+# ============================================================
+
 def operator_required(function):
+    """
+    Require an authenticated operator for protected routes.
+    """
 
     @wraps(function)
     def wrapper(*args, **kwargs):
@@ -96,6 +141,10 @@ def operator_required(function):
     return wrapper
 
 
+# ============================================================
+# LOGIN
+# ============================================================
+
 @app.post("/api/login")
 def login():
 
@@ -108,7 +157,6 @@ def login():
     password = str(
         data.get("password", "")
     )
-
 
     for operator, expected_password in OPERATOR_ACCOUNTS.items():
 
@@ -134,13 +182,15 @@ def login():
 
             break
 
-
     return jsonify({
         "success": False,
         "message": "Invalid username or password.",
     }), 401
 
 
+# ============================================================
+# LOGOUT
+# ============================================================
 
 @app.post("/api/logout")
 def logout():
@@ -153,6 +203,9 @@ def logout():
     })
 
 
+# ============================================================
+# SESSION
+# ============================================================
 
 @app.get("/api/session")
 def get_session():
@@ -165,6 +218,10 @@ def get_session():
         "username": session.get("username"),
     })
 
+
+# ============================================================
+# FRONTEND FILES
+# ============================================================
 
 @app.get("/")
 def home():
@@ -193,6 +250,9 @@ def javascript():
     )
 
 
+# ============================================================
+# GET OPERATOR DATA
+# ============================================================
 
 @app.get("/api/data")
 @operator_required
@@ -201,7 +261,6 @@ def get_my_data():
     operator = session["operator"]
 
     rows = read_operator_rows()
-
 
     own_rows = [
         row
@@ -212,7 +271,6 @@ def get_my_data():
         )
     ]
 
-
     return jsonify({
         "success": True,
         "operator": operator,
@@ -221,6 +279,9 @@ def get_my_data():
     })
 
 
+# ============================================================
+# ADD OPERATOR DATA
+# ============================================================
 
 @app.post("/add-data")
 @operator_required
@@ -229,7 +290,6 @@ def add_data():
     data = request.get_json(silent=True) or {}
 
     operator = session["operator"]
-
 
     required_fields = [
         "year",
@@ -240,13 +300,11 @@ def add_data():
         "source",
     ]
 
-
     missing = [
         field
         for field in required_fields
         if str(data.get(field, "")).strip() == ""
     ]
-
 
     if missing:
 
@@ -257,9 +315,7 @@ def add_data():
                 + ", ".join(missing),
         }), 400
 
-
     create_operator_csv()
-
 
     row = [
 
@@ -292,9 +348,7 @@ def add_data():
         str(
             data.get("notes", "")
         ).strip(),
-
     ]
-
 
     with OPERATOR_DATA_FILE.open(
         "a",
@@ -305,7 +359,6 @@ def add_data():
         writer = csv.writer(file)
         writer.writerow(row)
 
-
     return jsonify({
         "success": True,
         "message": "Evidence saved successfully.",
@@ -313,13 +366,15 @@ def add_data():
     })
 
 
+# ============================================================
+# RUN GREEN ICT DECISION-SUPPORT MODEL
+# ============================================================
 
 @app.post("/api/run-model")
 @operator_required
 def run_operator_model():
 
     operator = session["operator"]
-
 
     try:
 
@@ -328,13 +383,29 @@ def run_operator_model():
             export=False,
         )
 
-
         return jsonify({
             "success": True,
             "operator": operator,
-            "findings": output["findings"],
-            "results": output["results"],
-            "ai_meta": output.get("ai_meta", {}),   # NEW
+
+            # Detailed/consolidated gap findings
+            "findings": output.get(
+                "findings",
+                [],
+            ),
+
+            # Corrective-action results
+            # Expected to contain A01-A08
+            "results": output.get(
+                "results",
+                [],
+            ),
+
+            # AHP, TOPSIS, regression-model
+            # comparison and ranking metadata
+            "ai_meta": output.get(
+                "ai_meta",
+                {},
+            ),
         })
 
     except Exception as error:
@@ -342,7 +413,6 @@ def run_operator_model():
         app.logger.exception(
             "Model execution failed"
         )
-
 
         return jsonify({
             "success": False,
@@ -352,6 +422,9 @@ def run_operator_model():
         }), 500
 
 
+# ============================================================
+# CLEAR CURRENT OPERATOR DATA
+# ============================================================
 
 @app.post("/api/clear-data")
 @operator_required
@@ -360,7 +433,6 @@ def clear_my_data():
     operator = session["operator"]
 
     rows = read_operator_rows()
-
 
     remaining_rows = [
 
@@ -372,9 +444,7 @@ def clear_my_data():
             row.get("operator", ""),
             operator,
         )
-
     ]
-
 
     with OPERATOR_DATA_FILE.open(
         "w",
@@ -390,7 +460,6 @@ def clear_my_data():
         writer.writeheader()
         writer.writerows(remaining_rows)
 
-
     return jsonify({
         "success": True,
         "message":
@@ -398,6 +467,9 @@ def clear_my_data():
     })
 
 
+# ============================================================
+# APPLICATION STATUS
+# ============================================================
 
 @app.get("/api/status")
 def status():
@@ -423,16 +495,16 @@ def status():
 
         "operator":
             session.get("operator"),
-
     })
 
 
- 
+# ============================================================
+# START APPLICATION
+# ============================================================
 
 if __name__ == "__main__":
 
     create_operator_csv()
-
 
     print("=" * 60)
     print("GREEN ICT DECISION SUPPORT SYSTEM")
@@ -458,7 +530,14 @@ if __name__ == "__main__":
         "  Robi         -> RO2026"
     )
 
+    print()
+
+    print("Corrective-action model:")
+    print("  Consolidated gaps: G01-G08")
+    print("  Corrective actions: A01-A08")
+
     print("=" * 60)
 
-
-    app.run(debug=True)
+    app.run(
+        debug=True
+    )
